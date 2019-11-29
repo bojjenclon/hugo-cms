@@ -407,7 +407,7 @@ class CMS extends React.Component {
               <Container>
                 <Divider horizontal style={{ marginBottom: '2em' }}>Files</Divider>
     
-                <List divided relaxed style={{ maxHeight: '768px', overflowY: 'auto' }}>
+                <List divided relaxed style={{ maxHeight: '100vh', overflowY: 'auto' }}>
                   {this.posts.map((postName) => {
                     const activePost = this.state.currentPost === postName;
 
