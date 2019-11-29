@@ -40,8 +40,13 @@ services:
       - client
       - backend
     networks:
+      - default
       - app-network
 
 networks:
+  default:
+    external:
+      name: nginx-proxy
+  
   app-network:
     driver: bridge
