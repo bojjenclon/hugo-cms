@@ -32,9 +32,9 @@ services:
     networks:
       - app-network
   
-  webserver:
+  proxy:
     build: ./nginx
-    container_name: webserver
+    container_name: proxy
     restart: unless-stopped
     ports:
       - '8080:8080'

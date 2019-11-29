@@ -9,7 +9,7 @@ const matter = require('gray-matter');
 const toml = require('toml');
 
 const prod = process.env.NODE_ENV === 'production';
-const API_ENDPOINT = `http://${prod ? 'backend' : 'localhost'}:3001`;
+const API_ENDPOINT = `${prod ? '/api' : 'http://localhost:3001'}`;
 
 import Head from "next/head";
 import Router from 'next/router';
