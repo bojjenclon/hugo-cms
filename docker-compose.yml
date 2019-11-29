@@ -41,6 +41,11 @@ services:
     depends_on:
       - client
       - backend
+    environment:
+      - VIRTUAL_HOST=
+      - VIRTUAL_PORT=
+      - LETSENCRYPT_HOST=
+      - LETSENCRYPT_EMAIL=
     networks:
       - nginx-proxy
       - app-network
