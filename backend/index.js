@@ -127,6 +127,8 @@ app.use(cors({
 
 app.get('/config', (req, res) => {
   const publicFields = {
+    api: config.api,
+    
     postPath: config.postPath,
     rootPath: config.rootPath
   };

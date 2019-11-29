@@ -5,6 +5,9 @@ const api = axios.create({
 	withCredentials: true
 });
 
+const prod = process.env.NODE_ENV === 'production';
+const API_ENDPOINT = `http://${prod ? 'backend' : 'localhost'}:3001`;
+
 import Head from "next/head";
 
 import {
@@ -38,7 +41,7 @@ class Index extends React.Component {
   }
 
   componentDidMount() {
-    api.get('http://localhost:3001/isLoggedIn')
+    api.get(`${API_ENDPOINT}/isLoggedIn`)
       .then((({ data }) => {
         const { success } = data;
 
@@ -62,7 +65,7 @@ class Index extends React.Component {
       password: this.state.password
     };
 
-    api.post('http://localhost:3001/login', credentials)
+    api.post(`${API_ENDPOINT}/login`, credentials)
       .then(({ data }) => {
         const { message } = data;
 

@@ -8,6 +8,9 @@ const moment = require('moment');
 const matter = require('gray-matter');
 const toml = require('toml');
 
+const prod = process.env.NODE_ENV === 'production';
+const API_ENDPOINT = `http://${prod ? 'backend' : 'localhost'}:3001`;
+
 import Head from "next/head";
 import Router from 'next/router';
 
@@ -84,8 +87,8 @@ class CMS extends React.Component {
   }
 
   static async getInitialProps({ req, res }) {
-    const { data: config } = await api.get('http://localhost:3001/config');
-    const { data: posts } = await api.get(`http://localhost:3001/listPosts?path=${config.postPath}`);
+    const { data: config } = await api.get(`${API_ENDPOINT}/config`);
+    const { data: posts } = await api.get(`${API_ENDPOINT}/listPosts?path=${config.postPath}`);
 
     return {
       config,
@@ -94,7 +97,7 @@ class CMS extends React.Component {
   }
 
   componentDidMount() {
-      api.get('http://localhost:3001/isLoggedIn')
+      api.get(`${API_ENDPOINT}/isLoggedIn`)
         .then((({ data }) => {
           const { success } = data;
   
@@ -231,7 +234,7 @@ class CMS extends React.Component {
   }
 
   openPost(postName) {
-    api.get(`http://localhost:3001/retrievePost?path=${this.config.postPath}\\${postName}`)
+    api.get(`${API_ENDPOINT}/retrievePost?path=${this.config.postPath}\\${postName}`)
       .then(({ data }) => {
         this.setState({
           isPostNew: false,
@@ -257,7 +260,7 @@ class CMS extends React.Component {
       return;
     }
 
-    api.post('http://localhost:3001/savePost', {
+    api.post(`${API_ENDPOINT}/savePost`, {
         path: `${this.config.postPath}\\${safeFileName}`,
         content: markdown
       })
@@ -289,7 +292,7 @@ class CMS extends React.Component {
         });
 
         // Pull new post list
-        api.get(`http://localhost:3001/listPosts?path=${this.config.postPath}`)
+        api.get(`${API_ENDPOINT}/listPosts?path=${this.config.postPath}`)
           .then(({ data }) => {
             this.setState({
               posts: data
@@ -301,7 +304,7 @@ class CMS extends React.Component {
   onDelete = () => {
     const { currentPost } = this.state;
 
-    api.post('http://localhost:3001/deletePost', {
+    api.post(`${API_ENDPOINT}/deletePost`, {
         path: `${this.config.postPath}\\${currentPost}`
       })
       .then(({ data }) => {
@@ -328,7 +331,7 @@ class CMS extends React.Component {
         }
 
         // Pull new post list
-        api.get(`http://localhost:3001/listPosts?path=${this.config.postPath}`)
+        api.get(`${API_ENDPOINT}/listPosts?path=${this.config.postPath}`)
           .then(({ data }) => {
             this.setState({
               posts: data
@@ -344,7 +347,7 @@ class CMS extends React.Component {
       buildRunning: true
     });
 
-    api.post('http://localhost:3001/buildSite', { path: this.config.rootPath })
+    api.post(`${API_ENDPOINT}/buildSite`, { path: this.config.rootPath })
       .then(({ data }) => {
         const { success } = data;
 
@@ -375,7 +378,7 @@ class CMS extends React.Component {
   }
 
   onLogout = () => {
-    api.post('http://localhost:3001/logout')
+    api.post(`${API_ENDPOINT}/logout`)
       .then(({ data }) => {
         const { success } = data;
 
