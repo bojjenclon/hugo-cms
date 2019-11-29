@@ -42,11 +42,11 @@ services:
       - client
       - backend
     networks:
-      - default
+      - nginx-proxy
       - app-network
 
 networks:
-  default:
+  nginx-proxy:
     external:
       name: nginx-proxy
   
