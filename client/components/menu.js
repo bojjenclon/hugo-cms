@@ -16,6 +16,9 @@ const MainMenu = (props) => (
       <Menu.Item as='a' onClick={props.buildSiteFn} disabled={props.isBuildRunning} style={{ marginLeft: 'auto' }}>
         Build Site <Loader active={props.isBuildRunning} />
       </Menu.Item>
+      <Menu.Item as='a' onClick={props.logoutFn} disabled={props.isBuildRunning}>
+        Logout
+      </Menu.Item>
     </Container>
   </Menu>
 );

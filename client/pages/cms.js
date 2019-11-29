@@ -1,10 +1,15 @@
 const axios = require('axios');
+const api = axios.create({
+	withCredentials: true
+});
+
 const sanitize = require('sanitize-filename');
 const moment = require('moment');
 const matter = require('gray-matter');
 const toml = require('toml');
 
 import Head from "next/head";
+import Router from 'next/router';
 
 import {
   Button,
@@ -13,7 +18,8 @@ import {
   Divider,
   Grid,
   Input,
-  List
+  List,
+  Loader
 } from "semantic-ui-react";
 
 import * as React from "react";
@@ -35,13 +41,7 @@ const matterConfig = {
   language: 'toml'
 };
 
-const sidebarContainerStyle = {
-};
-
-const mainContainerStyle = {
-};
-
-class Index extends React.Component {
+class CMS extends React.Component {
   constructor(props) {
     super(props);
 
@@ -62,9 +62,11 @@ class Index extends React.Component {
       ].join('\n');
 
     this.state = {
-      config: {},
+      loading: true,
 
-      posts: [],
+      config: props.config || {},
+
+      posts: props.posts || [],
   
       isPostNew: true,
       currentPost: `${date.format('M-D-YYYY h-mm-ss A')}.md`,
@@ -79,6 +81,35 @@ class Index extends React.Component {
 
       buildRunning: false
     };
+  }
+
+  static async getInitialProps({ req, res }) {
+    const { data: config } = await api.get('http://localhost:3001/config');
+    const { data: posts } = await api.get(`http://localhost:3001/listPosts?path=${config.postPath}`);
+
+    return {
+      config,
+      posts
+    };
+  }
+
+  componentDidMount() {
+      api.get('http://localhost:3001/isLoggedIn')
+        .then((({ data }) => {
+          const { success } = data;
+  
+          if (!success) {
+            Router.replace('/');
+          } else {
+            this.setState({
+              loading: false
+            });
+          }
+        }));
+  }
+
+  get isLoading() {
+    return this.state.loading;
   }
 
   get config() {
@@ -200,7 +231,7 @@ class Index extends React.Component {
   }
 
   openPost(postName) {
-    axios.get(`http://localhost:3001/retrievePost?path=${this.config.postPath}\\${postName}`)
+    api.get(`http://localhost:3001/retrievePost?path=${this.config.postPath}\\${postName}`)
       .then(({ data }) => {
         this.setState({
           isPostNew: false,
@@ -226,7 +257,7 @@ class Index extends React.Component {
       return;
     }
 
-    axios.post('http://localhost:3001/savePost', {
+    api.post('http://localhost:3001/savePost', {
         path: `${this.config.postPath}\\${safeFileName}`,
         content: markdown
       })
@@ -258,7 +289,7 @@ class Index extends React.Component {
         });
 
         // Pull new post list
-        axios.get(`http://localhost:3001/listPosts?path=${this.config.postPath}`)
+        api.get(`http://localhost:3001/listPosts?path=${this.config.postPath}`)
           .then(({ data }) => {
             this.setState({
               posts: data
@@ -270,7 +301,7 @@ class Index extends React.Component {
   onDelete = () => {
     const { currentPost } = this.state;
 
-    axios.post('http://localhost:3001/deletePost', {
+    api.post('http://localhost:3001/deletePost', {
         path: `${this.config.postPath}\\${currentPost}`
       })
       .then(({ data }) => {
@@ -297,7 +328,7 @@ class Index extends React.Component {
         }
 
         // Pull new post list
-        axios.get(`http://localhost:3001/listPosts?path=${this.config.postPath}`)
+        api.get(`http://localhost:3001/listPosts?path=${this.config.postPath}`)
           .then(({ data }) => {
             this.setState({
               posts: data
@@ -313,7 +344,7 @@ class Index extends React.Component {
       buildRunning: true
     });
 
-    axios.post('http://localhost:3001/buildSite', { path: this.config.rootPath })
+    api.post('http://localhost:3001/buildSite', { path: this.config.rootPath })
       .then(({ data }) => {
         const { success } = data;
 
@@ -343,42 +374,37 @@ class Index extends React.Component {
       });
   }
 
-  componentDidMount() {
-    axios.get('http://localhost:3001/config')
+  onLogout = () => {
+    api.post('http://localhost:3001/logout')
       .then(({ data }) => {
-        this.setState({ config: data });
+        const { success } = data;
 
-        axios.get(`http://localhost:3001/listPosts?path=${data.postPath}`)
-          .then(({ data }) => {
-            this.setState({
-              posts: data
-            });
-          });
+        if (success) {
+          Router.push('/');
+        }
       });
   }
+  
+  loadingContent() {
+    return (
+      <Loader active={this.isLoading} indeterminate size='massive'>Loading</Loader>
+    );
+  }
 
-  render() {
+  mainContent() {
     return (
       <div>
-        <Head>
-          <title>Hugo - CMS</title>
-    
-          <link
-            rel="stylesheet"
-            href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css"
-          />
-        </Head>
-    
         <MainMenu
           newPostFn={this.createNewPost}
           buildSiteFn={this.buildSite}
+          logoutFn={this.onLogout}
           isBuildRunning={this.isBuildRunning}
         />
     
         <Container style={{ height: 'calc(100% - 6em)', marginTop: '2em' }}>
           <Grid divided style={{ height: '100%' }}>
             <Grid.Column width={5}>
-              <Container style={ sidebarContainerStyle }>
+              <Container>
                 <Divider horizontal style={{ marginBottom: '2em' }}>Files</Divider>
     
                 <List divided relaxed style={{ maxHeight: '768px', overflowY: 'auto' }}>
@@ -403,7 +429,7 @@ class Index extends React.Component {
             </Grid.Column>
     
             <Grid.Column width={11}>
-              <Container text style={ mainContainerStyle }>
+              <Container text>
                 <Divider horizontal style={{ marginBottom: '2em' }}>Post</Divider>
    
                 <SimpleMDE
@@ -484,6 +510,23 @@ class Index extends React.Component {
       </div>
     );
   }
+
+  render() {
+    return (
+      <div>
+        <Head>
+          <title>Hugo CMS</title>
+    
+          <link
+            rel="stylesheet"
+            href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css"
+          />
+        </Head>
+    
+        { this.isLoading ? this.loadingContent() : this.mainContent() }
+      </div>
+    );
+  }
 }
 
-export default Index;
+export default CMS;

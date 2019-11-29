@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
 const promisify = require('util').promisify;
@@ -12,7 +13,38 @@ const readFile = promisify(fs.readFile);
 
 const { exec } = require('child_process');
 
+const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require("bcrypt");
+const session = require('express-session');
+
 const config = require('./config.json');
+const db = new sqlite3.Database('./db/users.db', async (err) => {
+  if (err) {
+    console.error(err.message);
+  } else {
+    console.log('Connected to the users database.');
+
+    db.run(`CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username text UNIQUE, 
+      password text,
+      CONSTRAINT username_unique UNIQUE (username)
+      )`,
+      async (err) => {
+        if (err) {
+          // Table already created
+        } else {
+          // Table just created, creating some rows
+          const insert = 'INSERT INTO users (username, password) VALUES (?, ?)';
+          const hashedPassword = await bcrypt.hash(config.password, 10);
+
+          db.run(insert, [config.username, hashedPassword]);
+
+          console.log('Created default user');
+        }
+      });
+  }
+});
 
 async function scan(directoryName, recursive = true) {
   let results = [];
@@ -35,12 +67,38 @@ async function scan(directoryName, recursive = true) {
 }
 
 const port = 3001;
-const app = express(); app.listen(port, () => {
+const app = express();
+app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(session({
+  name: 'frontend.sid',
+  secret: 'f7932cc2-124b-11ea-8d71-362b9e155667',
+
+  resave: true,
+  saveUninitialized: true,
+
+  cookie: {
+    secure: app.get('env') === 'production', 
+    maxAge: 60000,
+    expires: false,
+    httpOnly: false
+  }
+}));
+
+app.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Credentials', true);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.header("Access-Control-Allow-Origin", "http://localhost");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  
+  next();
+});
 
 // https://medium.com/@alexishevia/using-cors-in-express-cac7e29b005b
 const allowedOrigins = [
@@ -48,25 +106,32 @@ const allowedOrigins = [
   config.domain
 ];
 app.use(cors({
-  origin: function (origin, callback) {    
+  origin: function (origin, callback) {
     // allow requests with no origin 
     // (like mobile apps or curl requests)
     if (!origin) {
-      return callback(null, true); 
+      return callback(null, true);
     }
-    
+
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
 
       return callback(new Error(msg), false);
-    } 
-    
+    }
+
     return callback(null, true);
-  }
+  },
+
+  credentials: true
 }));
 
 app.get('/config', (req, res) => {
-  res.json(config);
+  const publicFields = {
+    postPath: config.postPath,
+    rootPath: config.rootPath
+  };
+
+  res.json(publicFields);
 });
 
 app.get('/listPosts', async (req, res) => {
@@ -120,4 +185,55 @@ app.post('/buildSite', (req, res) => {
       success: !err
     });
   });
+});
+
+app.post('/login', (req, res) => {
+  const { body } = req;
+  const { username, password } = body;
+
+  const sql = 'SELECT * FROM users WHERE username = ?';
+  const params = [username];
+
+  db.get(sql, params, async (err, row) => {
+      if (err){
+        res.status(400).json({
+          "error": err.message
+        })
+
+        return;
+      }
+
+      const arePasswordsSame = await bcrypt.compare(password, row.password);
+      if (arePasswordsSame) {
+        req.session.userId = row.id;
+        req.session.username = row.username;
+
+        res.status(200)
+          .json({
+            "message": "success",
+            "data": row
+          });
+      } else {
+        res.status(400)
+          .json({
+            "message": "fail"
+          });
+      }
+  });
+});
+
+app.get('/isLoggedIn', (req, res) => {
+  res.json({
+    success: !!req.session.userId
+  })
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    res.clearCookie('frontend.sid', { path: '/', httpOnly: false })
+      .status(200)
+      .json({
+        success: !err
+      });
+  })
 });

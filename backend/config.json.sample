@@ -1,5 +1,8 @@
 {
   "domain": "",
   "rootPath": "",
-  "postPath": ""
+  "postPath": "",
+
+  "username": "admin",
+  "password": "password"
 }
