@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  client:
+    build: ./client
+    container_name: client
+    command: yarn start
+    volumes:
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules
+    expose:
+      - 3000
+    environment:
+      - NODE_ENV=production
+      - VIRTUAL_HOST=client.local
+    depends_on:
+      - backend
+    networks:
+      - app-network
+  
+  backend:
+    build: ./backend
+    container_name: backend
+    command: node server.js
+    expose:
+      - 3001
+    environment:
+      - VIRTUAL_HOST=backend
+      - VIRTUAL_PORT=3001
+    networks:
+      - app-network
+  
+  webserver:
+    build: ./nginx
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    depends_on:
+      - client
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
