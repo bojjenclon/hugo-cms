@@ -235,7 +235,7 @@ class CMS extends React.Component {
   }
 
   openPost(postName) {
-    api.get(`${API_ENDPOINT}/retrievePost?path=${this.config.postPath}\\${postName}`)
+    api.get(`${API_ENDPOINT}/retrievePost?path=${this.config.postPath}/${postName}`)
       .then(({ data }) => {
         this.setState({
           isPostNew: false,

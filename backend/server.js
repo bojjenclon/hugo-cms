@@ -209,6 +209,12 @@ router.post('/login', (req, res) => {
         return;
       }
 
+      if (!row) {
+        res.status(400).json({ 'message': 'fail' });
+
+        return;
+      }
+
       const arePasswordsSame = await bcrypt.compare(password, row.password);
       if (arePasswordsSame) {
         req.session.userId = row.id;
