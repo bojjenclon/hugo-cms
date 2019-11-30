@@ -1,6 +1,6 @@
 const axios = require('axios');
 const api = axios.create({
-	withCredentials: true
+  withCredentials: true
 });
 
 const sanitize = require('sanitize-filename');
@@ -71,15 +71,15 @@ class CMS extends React.Component {
       config: props.config || {},
 
       posts: props.posts || [],
-  
+
       isPostNew: true,
       currentPost: `${date.format('M-D-YYYY h-mm-ss A')}.md`,
-  
+
       markdown: newPostTemplate,
       selectedTab: 'write',
-  
+
       saveFileName: null,
-  
+
       saveOpen: false,
       deleteOpen: false,
 
@@ -98,18 +98,18 @@ class CMS extends React.Component {
   }
 
   componentDidMount() {
-      api.get(`${API_ENDPOINT}/isLoggedIn`)
-        .then((({ data }) => {
-          const { success } = data;
-  
-          if (!success) {
-            Router.replace('/');
-          } else {
-            this.setState({
-              loading: false
-            });
-          }
-        }));
+    api.get(`${API_ENDPOINT}/isLoggedIn`)
+      .then((({ data }) => {
+        const { success } = data;
+
+        if (!success) {
+          Router.replace('/');
+        } else {
+          this.setState({
+            loading: false
+          });
+        }
+      }));
   }
 
   get isLoading() {
@@ -203,7 +203,7 @@ class CMS extends React.Component {
 
     this.setState({
       saveFileName: fname,
-      
+
       saveOpen: true
     });
   }
@@ -262,9 +262,9 @@ class CMS extends React.Component {
     }
 
     api.post(`${API_ENDPOINT}/savePost`, {
-        path: `${this.config.postPath}/${safeFileName}`,
-        content: markdown
-      })
+      path: `${this.config.postPath}/${safeFileName}`,
+      content: markdown
+    })
       .then(({ data }) => {
         const { success } = data;
 
@@ -306,8 +306,8 @@ class CMS extends React.Component {
     const { currentPost } = this.state;
 
     api.post(`${API_ENDPOINT}/deletePost`, {
-        path: `${this.config.postPath}/${currentPost}`
-      })
+      path: `${this.config.postPath}/${currentPost}`
+    })
       .then(({ data }) => {
         const { success } = data;
 
@@ -388,7 +388,7 @@ class CMS extends React.Component {
         }
       });
   }
-  
+
   loadingContent() {
     return (
       <Loader active={this.isLoading} indeterminate size='massive'>Loading</Loader>
@@ -404,49 +404,50 @@ class CMS extends React.Component {
           logoutFn={this.onLogout}
           isBuildRunning={this.isBuildRunning}
         />
-    
-        <Container style={{ height: 'calc(100% - 6em)', marginTop: '2em' }}>
+
+        <Container style={{ height: 'calc(100vh - 5em)', marginTop: '2em' }}>
           <Grid divided style={{ height: '100%' }}>
-            <Grid.Column width={5}>
-              <Container>
+            <Grid.Column width={5} style={{ height: '100%' }}>
+              <Container style={{ height: '100%' }}>
                 <Divider horizontal style={{ marginBottom: '2em' }}>Files</Divider>
-    
-                <List divided relaxed style={{ maxHeight: '768px', overflowY: 'auto' }}>
+
+                <List divided relaxed style={{ height: 'calc(100% - 3em)', overflowY: 'auto' }}>
                   {this.posts.map((postName) => {
                     const activePost = this.state.currentPost === postName;
 
                     return (
-                      <List.Item 
+                      <List.Item
                         active={activePost}
                         disabled={this.isBuildRunning}
-                        as={activePost ? '' : 'a'} 
-                        key={postName} 
+                        as={activePost ? '' : 'a'}
+                        key={postName}
                         onClick={this.openPost.bind(this, postName)}
                       >
                         <List.Icon name='file' />
-                        <List.Content>{ postName }</List.Content>
+                        <List.Content>{postName}</List.Content>
                       </List.Item>
                     );
                   })}
                 </List>
               </Container>
             </Grid.Column>
-    
+
             <Grid.Column width={11}>
               <Container text>
                 <Divider horizontal style={{ marginBottom: '2em' }}>Post</Divider>
-   
+
                 <SimpleMDE
                   id="markdown-editor"
                   value={this.markdown}
                   onChange={this.onMarkdownChanged}
                   options={{
-                    spellChecker: false
+                    spellChecker: false,
+                    minHeight: '300px'
                   }}
                 />
 
                 <Button.Group attached='bottom'>
-                  <Button 
+                  <Button
                     negative
                     onClick={this.openDeleteDialog}
                     disabled={this.isPostNew || this.isBuildRunning}
@@ -454,15 +455,15 @@ class CMS extends React.Component {
                     Delete
                   </Button>
 
-                  <Button 
-                    primary 
+                  <Button
+                    primary
                     onClick={this.openSaveDialog}
                     disabled={this.isBuildRunning}
                   >
                     Save
                   </Button>
                 </Button.Group>
-                
+
                 <Confirm
                   open={this.isSaveOpen}
                   onCancel={this.closeSaveDialog.bind(this, true)}
@@ -475,9 +476,9 @@ class CMS extends React.Component {
                         </Grid.Column>
 
                         <Grid.Column width={14} verticalAlign='middle'>
-                          <Input 
-                            fluid 
-                            icon='save' 
+                          <Input
+                            fluid
+                            icon='save'
                             placeholder={this.saveFileName}
                             onChange={this.onFileNameChange}
                           />
@@ -501,7 +502,7 @@ class CMS extends React.Component {
         </Container>
 
         <SemanticToastContainer position='bottom-left' />
-    
+
         <style global jsx>{`
           html,
           body,
@@ -520,14 +521,14 @@ class CMS extends React.Component {
       <div>
         <Head>
           <title>Hugo CMS</title>
-    
+
           <link
             rel="stylesheet"
             href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css"
           />
         </Head>
-    
-        { this.isLoading ? this.loadingContent() : this.mainContent() }
+
+        {this.isLoading ? this.loadingContent() : this.mainContent()}
       </div>
     );
   }
