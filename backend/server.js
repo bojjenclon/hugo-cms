@@ -12,7 +12,8 @@ const readdirp = promisify(fs.readdir);
 const statp = promisify(fs.stat);
 const readFile = promisify(fs.readFile);
 
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
+const hugo = require('hugo-bin');
 
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require("bcrypt");
@@ -186,7 +187,7 @@ router.post('/buildSite', (req, res) => {
   const { body } = req;
   const { path } = body;
 
-  exec('hugo --minify', { cwd: path }, (err, stdout, stderr) => {
+  execFile(hugo, { cwd: path }, (err, stdout, stderr) => {
     res.json({
       success: !err
     });

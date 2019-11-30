@@ -7,7 +7,7 @@ const api = axios.create({
 
 const prod = process.env.NODE_ENV === 'production';
 const URL = 'https://example.com';
-const API_ENDPOINT = prod ? `${URL}/api` : 'http://localhost:3001';
+const API_ENDPOINT = prod ? `${URL}/api` : 'http://localhost:3001/api';
 
 import Head from "next/head";
 

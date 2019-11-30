@@ -10,7 +10,7 @@ const toml = require('toml');
 
 const prod = process.env.NODE_ENV === 'production';
 const URL = 'https://example.com';
-const API_ENDPOINT = prod ? `${URL}/api` : 'http://localhost:3001';
+const API_ENDPOINT = prod ? `${URL}/api` : 'http://localhost:3001/api';
 
 import Head from "next/head";
 import Router from 'next/router';
@@ -262,7 +262,7 @@ class CMS extends React.Component {
     }
 
     api.post(`${API_ENDPOINT}/savePost`, {
-        path: `${this.config.postPath}\\${safeFileName}`,
+        path: `${this.config.postPath}/${safeFileName}`,
         content: markdown
       })
       .then(({ data }) => {
@@ -306,7 +306,7 @@ class CMS extends React.Component {
     const { currentPost } = this.state;
 
     api.post(`${API_ENDPOINT}/deletePost`, {
-        path: `${this.config.postPath}\\${currentPost}`
+        path: `${this.config.postPath}/${currentPost}`
       })
       .then(({ data }) => {
         const { success } = data;
