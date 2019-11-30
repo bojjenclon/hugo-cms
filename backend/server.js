@@ -1,4 +1,5 @@
 const express = require("express");
+const router = express.Router();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -84,7 +85,7 @@ app.use(session({
   saveUninitialized: true,
 
   cookie: {
-    secure: app.get('env') === 'production', 
+    secure: router.get('env') === 'production', 
     maxAge: 60000,
     expires: false,
     httpOnly: false
@@ -126,7 +127,9 @@ app.use(cors({
   credentials: true
 }));
 
-app.get('/config', (req, res) => {
+app.use('/api', router);
+
+router.get('/config', (req, res) => {
   const publicFields = {
     api: config.api,
     
@@ -137,7 +140,7 @@ app.get('/config', (req, res) => {
   res.json(publicFields);
 });
 
-app.get('/listPosts', async (req, res) => {
+router.get('/listPosts', async (req, res) => {
   const { query } = req;
   const { path } = query;
 
@@ -146,7 +149,7 @@ app.get('/listPosts', async (req, res) => {
   res.json(posts);
 });
 
-app.get('/retrievePost', async (req, res) => {
+router.get('/retrievePost', async (req, res) => {
   const { query } = req;
   const { path } = query;
 
@@ -157,7 +160,7 @@ app.get('/retrievePost', async (req, res) => {
   res.json({ file: path, content: content.replace(/\r\n/g, '\n') });
 });
 
-app.post('/savePost', (req, res) => {
+router.post('/savePost', (req, res) => {
   const { body } = req;
   const { path, content } = body;
 
@@ -168,7 +171,7 @@ app.post('/savePost', (req, res) => {
   });
 });
 
-app.post('/deletePost', (req, res) => {
+router.post('/deletePost', (req, res) => {
   const { body } = req;
   const { path } = body;
 
@@ -179,7 +182,7 @@ app.post('/deletePost', (req, res) => {
   });
 });
 
-app.post('/buildSite', (req, res) => {
+router.post('/buildSite', (req, res) => {
   const { body } = req;
   const { path } = body;
 
@@ -190,7 +193,7 @@ app.post('/buildSite', (req, res) => {
   });
 });
 
-app.post('/login', (req, res) => {
+router.post('/login', (req, res) => {
   const { body } = req;
   const { username, password } = body;
 
@@ -225,13 +228,13 @@ app.post('/login', (req, res) => {
   });
 });
 
-app.get('/isLoggedIn', (req, res) => {
+router.get('/isLoggedIn', (req, res) => {
   res.json({
     success: !!req.session.userId
   })
 });
 
-app.post('/logout', (req, res) => {
+router.post('/logout', (req, res) => {
   req.session.destroy((err) => {
     res.clearCookie('frontend.sid', { path: '/', httpOnly: false })
       .status(200)
@@ -240,3 +243,4 @@ app.post('/logout', (req, res) => {
       });
   })
 });
+
