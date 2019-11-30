@@ -187,7 +187,7 @@ router.post('/buildSite', (req, res) => {
   const { body } = req;
   const { path } = body;
 
-  execFile(hugo, { cwd: path }, (err, stdout, stderr) => {
+  execFile(hugo, ['--minify'], { cwd: path }, (err, stdout, stderr) => {
     res.json({
       success: !err
     });
