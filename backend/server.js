@@ -102,6 +102,7 @@ app.use(function (req, res, next) {
 
 // https://medium.com/@alexishevia/using-cors-in-express-cac7e29b005b
 const allowedOrigins = [
+  'localhost',
   'http://localhost:3000',
   config.domain
 ];
